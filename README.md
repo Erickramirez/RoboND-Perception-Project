@@ -1,9 +1,5 @@
 ## Project: Perception Pick & Place
-### Writeup Template: You can use this file as a template for your writeup if you want to submit it as a markdown file, but feel free to use some other method and submit a pdf if you prefer.
-
 ---
-
-
 # Required Steps for a Passing Submission:
 1. Extract features and train an SVM model on new objects (see `pick_list_*.yaml` in `/pr2_robot/config/` for the list of models you'll be trying to identify). 
 2. Write a ROS node and subscribe to `/pr2/world/points` topic. This topic contains noisy point cloud data that you must work with.
@@ -24,25 +20,62 @@
 12. Place all the objects from your pick list in their respective dropoff box and you have completed the challenge!
 13. Looking for a bigger challenge?  Load up the `challenge.world` scenario and see if you can get your perception pipeline working there!
 
-## [Rubric](https://review.udacity.com/#!/rubrics/1067/view) Points
-### Here I will consider the rubric points individually and describe how I addressed each point in my implementation.  
-
 ---
-### Writeup / README
+### Pipeline implemented
+The implemented steps are in the file [project_template.py](/pr2_robot/scripts/project_template.py)
+#### Pipeline for filtering and RANSAC plane fitting implemented.
+##### 1. Voxel Grid Downsampling 
+A voxel grid filter allows you to downsample the data by taking a spatial average of the points in the cloud confined by each voxel. This is because RGB-D cameras provide feature rich and particularly dense point clouds, meaning, more points are packed in per unit volume than, for example, a Lidar point cloud.  `Leaf=0.004`, This means that voxel is 0.004 cubic meter in volume.
+Note: Voxel size (or leaf size)  are in meters.
 
-#### 1. Provide a Writeup / README that includes all the rubric points and how you addressed each one.  You can submit your writeup as markdown or pdf.  
+![Alt text](/images/voxel_grid.png)
 
-You're reading it!
+##### 2. Statistical Outlier Filtering
+it is a filtering technique used to remove such outliers (noise due to external factors) is to perform a statistical analysis in the neighborhood of each point, and remove those points which do not meet a certain criteria
 
-### Exercise 1, 2 and 3 pipeline implemented
-#### 1. Complete Exercise 1 steps. Pipeline for filtering and RANSAC plane fitting implemented.
+##### 3. PassThrough filter
+We use axis_min and axis_max pairs to  isolate a region of interest containing only the table and the objects on the table, in this case I filtered 2 axis:
+* y: axis_min = -0.5 and axis_max = 0.5
+* z: axis_min = 0.6 and axis_max = 1.1
+Note: I included `y` axis because it was classifing other objects in the region which only matched with `z` axis. 
 
-#### 2. Complete Exercise 2 steps: Pipeline including clustering for segmentation implemented.  
+![Alt text](/images/pass_through_filter.png)
 
-#### 2. Complete Exercise 3 Steps.  Features extracted and SVM trained.  Object recognition implemented.
-Here is an example of how to include an image in your writeup.
+##### 4.RANSAC Plane Fitting
+It is [Random Sample consensus](https://en.wikipedia.org/wiki/Random_sample_consensus) It is used in order to remove the table itself from the scene. The RANSAC algorithm assumes that all of the data in a dataset is composed of both inliers and outliers, where inliers can be defined by a particular model with a specific set of parameters, while outliers do not fit that model and hence can be discarded
 
-![demo-1](https://user-images.githubusercontent.com/20687560/28748231-46b5b912-7467-11e7-8778-3095172b7b19.png)
+##### 5.Extracting Indices - Inliers and Outliers
+Once we have determined where the table is located, we can separate point clouds: 
+```
+extracted_inliers = cloud_filtered.extract(inliers, negative=False) #Table
+extracted_outliers = cloud_filtered.extract(inliers, negative=True) #Other objects
+```
+
+#### 2. Pipeline including clustering for segmentation implemented.  
+##### 1. Euclidean Clustering [DBSCAN](https://en.wikipedia.org/wiki/DBSCAN)
+ It is using a PCL library function called EuclideanClusterExtraction() to perform a DBSCAN cluster search for 3D point cloud.
+ ![Alt text](/images/clustering_pcl.png)
+ 
+DBSCAN stands for Density-Based Spatial Clustering of Applications with Noise. The DBSCAN algorithm creates clusters by grouping data points that are within some threshold distance `d` from the nearest other point in the data.
+it is very useful for the followig scenarios:
+* There is an unknown number of clusters present in your data but you know something about the characteristics you expect clusters to have. 
+* The data contain outliers that you want to exclude from clusters.
+* No need to define a termination / convergence criteria for this algorithm.
+
+In this lesson we also evaluated [k-means clustering](https://en.wikipedia.org/wiki/K-means_clustering), but it was not used because we need to know the number of clusters present.
+
+##### 2. Create Cluster-Mask Point Cloud to visualize each cluster separately
+It separates by coloer the shapes obtained. It is used for cluster visualization.
+
+ ![Alt text](/images/cluster-visualization.png)
+
+#### 3. Train data with SVM.
+first there was data captured from 
+
+
+#### 4. Features extracted and SVM trained.  Object recognition implemented.
+
+
 
 ### Pick and Place Setup
 
