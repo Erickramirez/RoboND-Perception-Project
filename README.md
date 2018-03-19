@@ -69,17 +69,45 @@ It separates by coloer the shapes obtained. It is used for cluster visualization
 
  ![Alt text](/images/cluster-visualization.png)
 
-#### 3. Train data with SVM.
-first there was data captured from 
+#### 3. Features extracted and SVM trained.  Object recognition implemented.
+##### 3.1 Extract features
+* It is using HSV color model
+* It is collection histograms as extracted features, ant the result will be normalized. 
+
+##### 3.2 Train data with SVM.
+###### 3.2.1 first there was data captured with [capture_features.py](/sensor_stick/scripts/capture_features.py). There was defined the following models:
+```
+models = [ \
+        'biscuits',
+        'soap',
+        'soap2',
+        'book',
+        'glue',
+        'sticky_notes',
+        'eraser',
+        'snacks']
+```
 
 
-#### 4. Features extracted and SVM trained.  Object recognition implemented.
+###### 3.2.2 Train the Support vector machine - [SVM](https://en.wikipedia.org/wiki/Support_vector_machine). It is using [scikit-learn](http://scikit-learn.org/stable/modules/svm.html) library. I tested with the different kernel and I kept `clf = svm.SVC(kernel='linear')` I checked [Kernel functions](http://scikit-learn.org/stable/modules/svm.html#svm-kernels)
+The result of this model is the file: 
+[perception-model.sav](/models/perception-model.sav)
+
+and the result of this file: 
+![Alt text](/images/svm.png)
 
 
 
 ### Pick and Place Setup
 
 #### 1. For all three tabletop setups (`test*.world`), perform object recognition, then read in respective pick list (`pick_list_*.yaml`). Next construct the messages that would comprise a valid `PickPlace` request output them to `.yaml` format.
+
+these are the final results about [output_1.yaml](/output/output_1.yaml), [output_2.yaml](/output/output_2.yaml), and [output_3.yaml](/output/output_3.yaml):
+* ![Alt text](/images/output_1.png)
+* ![Alt text](/images/output_2.png)
+* ![Alt text](/images/output_3.png)
+
+
 
 And here's another image! 
 ![demo-2](https://user-images.githubusercontent.com/20687560/28748286-9f65680e-7468-11e7-83dc-f1a32380b89c.png)
