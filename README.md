@@ -62,13 +62,13 @@ extracted_outliers = cloud_filtered.extract(inliers, negative=True) #Other objec
  It is using a PCL library function called EuclideanClusterExtraction() to perform a DBSCAN cluster search for 3D point cloud.
  ![Alt text](/images/clustering_pcl.png)
  
-DBSCAN stands for Density-Based Spatial Clustering of Applications with Noise. The DBSCAN algorithm creates clusters by grouping data points that are within some threshold distance `d` from the nearest other point in the data.
+DBSCAN stands for Density-Based Spatial Clustering of Applications with Noise. The DBSCAN algorithm creates clusters by grouping data points that are within some threshold distance `d` from the nearest point in the data.
 it is very useful for the following scenarios:
 * There is an unknown number of clusters present in your data but you know something about the characteristics you expect clusters to have. 
 * The data contain outliers that you want to exclude from clusters.
 * No need to define a termination / convergence criteria for this algorithm.
 
-In this lesson we also evaluated [k-means clustering](https://en.wikipedia.org/wiki/K-means_clustering), but it was not used because we need to know the number of clusters present.
+In this lesson, we also evaluated [k-means clustering](https://en.wikipedia.org/wiki/K-means_clustering), but it was not used because we need to know the number of clusters present.
 ```
     ec.set_ClusterTolerance(0.01)
     ec.set_MinClusterSize(50)
@@ -129,8 +129,8 @@ these are the final results about [output_1.yaml](/output/output_1.yaml), [outpu
 
 
 ## Discussion
-I tried to setup my own environment, because in the virtual machine I got a lot of lag and sometimes the robot doesn't fully grasped the objects. My pipeline identified correctly 100% of objects in test1.world, 100% in test2.world and 87.5% (7/8) in test3.world. the object that wasn't identified is the glue, in order to get a better accuracy it will need necessary a better classification, for instance we can use Deep learning for this task, also in order to get a more robust output, it will be necessary to have more samples and even scenarios with only a part of the object in order to get a better result in an overlapping. Also, some noise can cause issues, in this case we will need to improve the filters applied.
-Note: in order to get the results for the world 3, I modified the section (this is an area to inprove, a better way is an evaluation of tolerance on each world) :
+I tried to configure my own environment because in the virtual machine I got a lot of lag and sometimes the robot does not fully grasp the objects. My pipeline identified correctly 100% of objects in test1.world, 100% in test2.world and 87.5% (7/8) in test3.world. the object that wasn't identified is the glue, in order to get a better accuracy it will need necessary a better classification, for instance we can use Deep learning for this task, also in order to get a more robust output, it will be necessary to have more samples and even scenarios with only a part of the object in order to get a better result in an overlapping. Also, some noise can cause issues, in this case, we will need to improve the filters applied.
+Note: in order to get the results for the world 3, I modified the section (this is an area to improve, a better way is an evaluation of tolerance on each world) :
 ```
 if detected_set_objects == pick_set_objects or (len(detected_objects_labels)==len(pick_set_objects) and len(pick_set_objects) >5) :
         print('start pr2_mover')
