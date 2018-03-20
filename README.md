@@ -22,7 +22,13 @@
 
 ---
 ### Pipeline implemented
-The implemented steps are in the file [project_template.py](/pr2_robot/scripts/project_template.py)
+* The implemented steps are in the file [project_template.py](/pr2_robot/scripts/project_template.py)
+* Capture data (new models included):  [capture_features.py](/sensor_stick/scripts/capture_features.py)
+* train svm:  [train_svm.py](/sensor_stick/scripts/train_svm.py)
+* Classifier generated (model saved):   [perception-model.sav](/models/perception-model.sav)
+* Final resuts:[output_1.yaml](/output/output_1.yaml), [output_2.yaml](/output/output_2.yaml), and [output_3.yaml](/output/output_3.yaml)
+
+
 #### Pipeline for filtering and RANSAC plane fitting implemented.
 ##### 1. Voxel Grid Downsampling 
 A voxel grid filter allows you to downsample the data by taking a spatial average of the points in the cloud confined by each voxel. This is because RGB-D cameras provide feature rich and particularly dense point clouds, meaning, more points are packed in per unit volume than, for example, a Lidar point cloud.  `Leaf=0.004`, This means that voxel is 0.004 cubic meter in volume.
@@ -63,6 +69,11 @@ it is very useful for the following scenarios:
 * No need to define a termination / convergence criteria for this algorithm.
 
 In this lesson we also evaluated [k-means clustering](https://en.wikipedia.org/wiki/K-means_clustering), but it was not used because we need to know the number of clusters present.
+```
+    ec.set_ClusterTolerance(0.01)
+    ec.set_MinClusterSize(50)
+    ec.set_MaxClusterSize(50000)
+```
 
 ##### 2. Create Cluster-Mask Point Cloud to visualize each cluster separately
 It separates by color the shapes obtained. It is used for cluster visualization.
@@ -72,7 +83,15 @@ It separates by color the shapes obtained. It is used for cluster visualization.
 #### 3. Features extracted and SVM trained.  Object recognition implemented.
 ##### 3.1 Extract features
 * It is using HSV color model
-* It is collection histograms as extracted features, ant the result will be normalized. 
+* It is collection histograms as extracted features (using `compute_color_histograms()` and `compute_normal_histograms()` functions ), ant the result will be normalized. 
+```
+# Extract histogram features
+        chists = compute_color_histograms(ros_cluster, using_hsv=True)
+        normals = get_normals(ros_cluster)
+        nhists = compute_normal_histograms(normals)
+        # Compute the associated feature vector
+        feature = np.concatenate((chists, nhists))
+```
 
 ##### 3.2 Train data with SVM.
 ###### 3.2.1 first there was data captured with [capture_features.py](/sensor_stick/scripts/capture_features.py). There was defined the following models:
@@ -111,3 +130,12 @@ these are the final results about [output_1.yaml](/output/output_1.yaml), [outpu
 
 ## Discussion
 I tried to setup my own environment, because in the virtual machine I got a lot of lag and sometimes the robot doesn't fully grasped the objects. My pipeline identified correctly 100% of objects in test1.world, 100% in test2.world and 87.5% (7/8) in test3.world. the object that wasn't identified is the glue, in order to get a better accuracy it will need necessary a better classification, for instance we can use Deep learning for this task, also in order to get a more robust output, it will be necessary to have more samples and even scenarios with only a part of the object in order to get a better result in an overlapping. Also, some noise can cause issues, in this case we will need to improve the filters applied.
+Note: in order to get the results for the world 3, I modified the section (this is an area to inprove, a better way is an evaluation of tolerance on each world) :
+```
+if detected_set_objects == pick_set_objects or (len(detected_objects_labels)==len(pick_set_objects) and len(pick_set_objects) >5) :
+        print('start pr2_mover')
+        try:
+            pr2_mover(detected_objects_list)
+        except rospy.ROSInterruptException:
+            pass
+```
